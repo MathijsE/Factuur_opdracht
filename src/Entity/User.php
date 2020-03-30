@@ -2,11 +2,15 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
+ * @UniqueEntity(fields={"email"}, message="There is already an account with this email")
  */
 class User implements UserInterface
 {
@@ -32,6 +36,16 @@ class User implements UserInterface
      * @ORM\Column(type="string")
      */
     private $password;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Factuur", mappedBy="klantnummer")
+     */
+    private $factuurs;
+
+    public function __construct()
+    {
+        $this->factuurs = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -109,5 +123,36 @@ class User implements UserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection|Factuur[]
+     */
+    public function getFactuurs(): Collection
+    {
+        return $this->factuurs;
+    }
+
+    public function addFactuur(Factuur $factuur): self
+    {
+        if (!$this->factuurs->contains($factuur)) {
+            $this->factuurs[] = $factuur;
+            $factuur->setKlantnummer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFactuur(Factuur $factuur): self
+    {
+        if ($this->factuurs->contains($factuur)) {
+            $this->factuurs->removeElement($factuur);
+            // set the owning side to null (unless already changed)
+            if ($factuur->getKlantnummer() === $this) {
+                $factuur->setKlantnummer(null);
+            }
+        }
+
+        return $this;
     }
 }

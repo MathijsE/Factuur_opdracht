@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -35,6 +37,16 @@ class Product
      * @ORM\Column(type="float", nullable=true)
      */
     private $prijs;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Factuurregel", mappedBy="factuurregel_productcode", orphanRemoval=true)
+     */
+    private $factuurregels;
+
+    public function __construct()
+    {
+        $this->factuurregels = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -85,6 +97,37 @@ class Product
     public function setPrijs(?float $prijs): self
     {
         $this->prijs = $prijs;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Factuurregel[]
+     */
+    public function getFactuurregels(): Collection
+    {
+        return $this->factuurregels;
+    }
+
+    public function addFactuurregel(Factuurregel $factuurregel): self
+    {
+        if (!$this->factuurregels->contains($factuurregel)) {
+            $this->factuurregels[] = $factuurregel;
+            $factuurregel->setFactuurregelProductcode($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFactuurregel(Factuurregel $factuurregel): self
+    {
+        if ($this->factuurregels->contains($factuurregel)) {
+            $this->factuurregels->removeElement($factuurregel);
+            // set the owning side to null (unless already changed)
+            if ($factuurregel->getFactuurregelProductcode() === $this) {
+                $factuurregel->setFactuurregelProductcode(null);
+            }
+        }
 
         return $this;
     }
